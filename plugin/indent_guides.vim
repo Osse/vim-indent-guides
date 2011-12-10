@@ -53,6 +53,12 @@ call s:InitVariable('g:indent_guides_start_level',           1 )
 call s:InitVariable('g:indent_guides_enable_on_vim_startup', 0 )
 call s:InitVariable('g:indent_guides_debug',                 0 )
 call s:InitVariable('g:indent_guides_space_guides',          1 )
+" I guess we need something like this:
+" call s:InitVariable('g:indent_guides_use_char',              0 )
+" call s:InitVariable('g:indent_guides_character',            '⡁')
+" The user can put g:indent_guides_use char = 1 in his vimrc if he wishes.
+" Otherwise it is zero. Nevertheless we set a sensible default value
+" for which character is used.
 
 " Default mapping
 nmap <Leader>ig :IndentGuidesToggle<CR>

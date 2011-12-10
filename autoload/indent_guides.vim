@@ -33,6 +33,10 @@ endfunction
 function! indent_guides#enable()
   let g:indent_guides_autocmds_enabled = 1
 
+  " Here we need to check that the user has the correct 'conceallevel' and
+  " revert to color based indent guides if the user hasn't. I don't know which
+  " one is the correct one, but I know it's not zero. From what I can tell,
+  " this function is the first to be called when indent guides are turned on.
   call indent_guides#init_script_vars()
   call indent_guides#highlight_colors()
   call indent_guides#clear_matches()
@@ -44,7 +48,13 @@ function! indent_guides#enable()
     let l:column_start = (l:level - 1) * s:indent_size + 1
     let l:soft_pattern = indent_guides#indent_highlight_pattern('\s', l:column_start, s:guide_size)
     let l:hard_pattern = indent_guides#indent_highlight_pattern('\t', l:column_start, s:indent_size)
+    " I think we should either: 1. Explicity NOT allow conceal if indentation
+    " using hard tabs is detected since that will break everything (replacing
+    " a tab with a single character screws everything up) 2. Automatically
+    " use the 'list' and 'listchars' to provide the same effect.
 
+    " None of the below is needed if we you conceal since we dont't use the
+    " non-syntax way of highlighting. See ':he matchadd('
     " define the higlight patterns and add to matches list
     if g:indent_guides_space_guides
       call add(w:indent_guides_matches, matchadd(l:group, l:soft_pattern))
@@ -104,6 +114,7 @@ function! indent_guides#basic_highlight_colors()
 
   exe 'hi IndentGuidesEven guibg=' . l:gui_colors[0] . ' ctermbg=' . l:cterm_colors[0]
   exe 'hi IndentGuidesOdd  guibg=' . l:gui_colors[1] . ' ctermbg=' . l:cterm_colors[1]
+  " See the comment at the end of the next function. That holds here as well.
 endfunction
 
 "
@@ -137,6 +148,11 @@ function! indent_guides#gui_highlight_colors()
     exe 'hi IndentGuidesOdd  guibg=' . l:hi_odd_bg
     exe 'hi IndentGuidesEven guibg=' . l:hi_even_bg
   end
+  " Here we need some extra code to modify the Conceal highlight group. I am
+  " thinking that we can copy the color of the lighter background color, and
+  " use that as the color of the character and make the background color of the
+  " character equal to the regular background color. That should (I think)
+  " give a subtle dotted line look (at least with the default character)
 endfunction
 
 "
@@ -159,6 +175,8 @@ endfunction
 " Define default highlights.
 "
 function! indent_guides#define_default_highlights()
+  " We don't need this for conceal. It is probably better to avoid calling
+  " this function in the first place, rather than modifying it here.
   hi default clear IndentGuidesOdd
   hi default clear IndentGuidesEven
 endfunction
@@ -190,6 +208,8 @@ function! indent_guides#init_script_vars()
   let s:color_hex_bg_pat  = g:indent_guides_color_hex_guibg_pattern
   let s:color_name_bg_pat = g:indent_guides_color_name_guibg_pattern
   let s:start_level       = g:indent_guides_start_level
+  " let s:use_char          = g:indent_guides_color_use_char
+  " let s:character         = g:indent_guides_color_character
 
   " str2float not available in vim versions <= 7.1
   if has('float')
